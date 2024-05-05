@@ -251,8 +251,6 @@ class MultiCNT:
                 self.x[timestep, cnt_idx] = self.x[timestep - 1, cnt_idx] + delta_x[0]
                 self.y[timestep, cnt_idx] = self.y[timestep - 1, cnt_idx] + delta_y[0]
 
-                if
-
 
     def show_cnts(self, timestep):
         for cnt_idx in range(self.num_cnts):

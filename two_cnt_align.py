@@ -9,8 +9,8 @@ from tqdm import tqdm
 class TwoCNT:
     def __init__(self):
         # Simulation settings
-        self.timesteps = 300
-        self.timesteps_per_second = 10
+        self.timesteps = 30000
+        self.timesteps_per_second = 100
         self.time = self.timesteps_per_second**(-1)
 
         # CNT i initial settings
@@ -19,7 +19,7 @@ class TwoCNT:
         self.theta_i = np.zeros((self.timesteps + 2, 1))
         self.x_i = np.zeros((self.timesteps + 2, 1))
         self.y_i = np.zeros((self.timesteps + 2, 1))
-        self.theta_i[0:2] = np.pi/2
+        self.theta_i[0:2] = np.pi/6
         self.x_i[0:2] = 0.25*10**(-4)
         self.y_i[0:2] = 0.5*10**(-4)
         
@@ -29,7 +29,7 @@ class TwoCNT:
         self.theta_j = np.zeros((self.timesteps + 2, 1))
         self.x_j = np.zeros((self.timesteps + 2, 1))
         self.y_j = np.zeros((self.timesteps + 2, 1))
-        self.theta_j[0:2] = np.pi/3
+        self.theta_j[0:2] = np.pi
         self.x_j[0:2] = 0.75*10**(-4)
         self.y_j[0:2] = 0.5*10**(-4)
         
@@ -38,7 +38,7 @@ class TwoCNT:
         self.cnt_conductivity = 1*10**(4)  #S/m
 
         # Fluid and interphase properties
-        self.viscosity = 30  #mPa*s
+        self.viscosity = 25  #mPa*s
         self.fluid_permittivity = 11
         self.fluid_conductivity = 3*10**(-5)  #S/m
         self.interphase_permittivity = 1*10**(4)
@@ -47,7 +47,6 @@ class TwoCNT:
 
         # Electric field properties
         self.E_mag = 6.6  #V/mm
-        self.E_freq = 50  #Hz
 
         # Derived values
         self.eq_permittivity_i = self.interphase_permittivity*((self.cnt_permittivity+(self.interphase_thickness /
@@ -120,8 +119,7 @@ class TwoCNT:
         plt.show()
 
     def calc_viscosity(self, timestep):
-        #TODO: all of this
-        return self.viscosity
+        return self.viscosity * np.exp((1 / (timestep/self.timesteps_per_second - 0.5) ** 2) * np.exp(timestep/self.timesteps_per_second - 3))
 
     def calculate_r(self, timestep):
         r_i = np.sqrt(self.x_i[timestep] ** 2 + self.y_i[timestep] ** 2)
@@ -364,8 +362,8 @@ class TwoCNT:
         for timestep in tqdm(range(2, self.timesteps+2)):
             # Calculate new theta:
             t_dep_i, t_dep_j = self.calc_dep_t(timestep=timestep)
-            t_coup_i, t_coup_j = self.calc_coup_t(timestep=timestep)
-            t_fr_i, t_fr_j = self.calc_fr_t(timestep=timestep)
+            t_coup_i, t_coup_j = (0, 0) #self.calc_coup_t(timestep=timestep)
+            t_fr_i, t_fr_j = (0, 0) #self.calc_fr_t(timestep=timestep)
             theta_dot_dot_i = (t_dep_i + t_coup_i + t_fr_i) / self.I_i
             theta_dot_dot_j = (t_dep_j + t_coup_j + t_fr_j) / self.I_j
             theta_dot_i = (self.theta_i[timestep - 1][0] - self.theta_i[timestep - 2][0]) / self.time
@@ -374,9 +372,9 @@ class TwoCNT:
             self.theta_j[timestep] = theta_dot_j * self.time + 0.5 * theta_dot_dot_j * (self.time ** 2)
 
             # Calculate new x and y:
-            f_fr_i_x, f_fr_i_y, f_fr_j_x, f_fr_j_y = self.calc_fr_f(timestep=timestep)
-            f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y = self.calc_coup_f(timestep=timestep)
-            f_rep_i_x, f_rep_i_y, f_rep_j_x, f_rep_j_y = self.calc_rep_f(timestep=timestep, f_coups=(f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y))
+            f_fr_i_x, f_fr_i_y, f_fr_j_x, f_fr_j_y = (0, 0, 0, 0) #self.calc_fr_f(timestep=timestep)
+            f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y = (0, 0, 0, 0) #self.calc_coup_f(timestep=timestep)
+            f_rep_i_x, f_rep_i_y, f_rep_j_x, f_rep_j_y = (0, 0, 0, 0) #self.calc_rep_f(timestep=timestep, f_coups=(f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y))
             x_dot_dot_i = (f_fr_i_x + f_coup_i_x + f_rep_i_x) / self.m_i
             x_dot_dot_j = (f_fr_j_x + f_coup_j_x + f_rep_j_x) / self.m_j
             y_dot_dot_i = (f_rep_i_y + f_coup_i_y + f_rep_i_y) / self.m_i
@@ -412,7 +410,11 @@ class TwoCNT:
     
 if __name__ == '__main__':
     sim = TwoCNT()
-    sim.show_cnts(timestep=0)
     sim.run(show=True)
+    sim.show_cnts(timestep=0)
+    sim.show_cnts(timestep=3)
+    sim.show_cnts(timestep=30)
     sim.show_cnts(timestep=300)
+    sim.show_cnts(timestep=3000)
+    sim.show_cnts(timestep=30000)
 
