@@ -1,7 +1,5 @@
 import math
 import numpy as np
-import scipy as sp
-import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -29,7 +27,7 @@ class TwoCNT:
         self.theta_j = np.zeros((self.timesteps + 2, 1))
         self.x_j = np.zeros((self.timesteps + 2, 1))
         self.y_j = np.zeros((self.timesteps + 2, 1))
-        self.theta_j[0:2] = np.pi
+        self.theta_j[0:2] = np.pi/6
         self.x_j[0:2] = 0.75*10**(-4)
         self.y_j[0:2] = 0.5*10**(-4)
         
@@ -38,7 +36,7 @@ class TwoCNT:
         self.cnt_conductivity = 1*10**(4)  #S/m
 
         # Fluid and interphase properties
-        self.viscosity = 25  #mPa*s
+        self.viscosity = 30  #mPa*s
         self.fluid_permittivity = 11
         self.fluid_conductivity = 3*10**(-5)  #S/m
         self.interphase_permittivity = 1*10**(4)
@@ -64,9 +62,6 @@ class TwoCNT:
         self.I_i = self.m_i * (self.a_i ** 2 + (2 * self.b_i) ** 2) / 5
         self.I_j = self.m_j * (self.a_j ** 2 + (2 * self.b_j) ** 2) / 5
 
-        # Post sim results, #TODO: remove all of this
-        self.t_dep_i = []
-        self.t_fr_i = []
         
     def show_cnts(self, timestep):
         # CNT i
@@ -83,8 +78,7 @@ class TwoCNT:
         end_y_j = self.y_j[timestep] - self.a_j * np.sin(self.theta_j[timestep])
         plt.plot([start_x_j, end_x_j], [start_y_j, end_y_j])
         plt.title('Show CNT at timestep ' + str(timestep))
-        print('At timestep ' + str(timestep) + ' CNT i theta: ' + str(self.theta_i[timestep]) +
-              ' CNT j theta: ' + str(self.theta_j[timestep]))
+        print('At timestep ' + str(timestep) + ' CNT i theta: ' + str(self.theta_i[timestep]) + ' CNT j theta: ' + str(self.theta_j[timestep]))
 
         plt.show()
 
@@ -362,8 +356,8 @@ class TwoCNT:
         for timestep in tqdm(range(2, self.timesteps+2)):
             # Calculate new theta:
             t_dep_i, t_dep_j = self.calc_dep_t(timestep=timestep)
-            t_coup_i, t_coup_j = (0, 0) #self.calc_coup_t(timestep=timestep)
-            t_fr_i, t_fr_j = (0, 0) #self.calc_fr_t(timestep=timestep)
+            t_coup_i, t_coup_j = self.calc_coup_t(timestep=timestep)
+            t_fr_i, t_fr_j = self.calc_fr_t(timestep=timestep)
             theta_dot_dot_i = (t_dep_i + t_coup_i + t_fr_i) / self.I_i
             theta_dot_dot_j = (t_dep_j + t_coup_j + t_fr_j) / self.I_j
             theta_dot_i = (self.theta_i[timestep - 1][0] - self.theta_i[timestep - 2][0]) / self.time
@@ -372,9 +366,9 @@ class TwoCNT:
             self.theta_j[timestep] = theta_dot_j * self.time + 0.5 * theta_dot_dot_j * (self.time ** 2)
 
             # Calculate new x and y:
-            f_fr_i_x, f_fr_i_y, f_fr_j_x, f_fr_j_y = (0, 0, 0, 0) #self.calc_fr_f(timestep=timestep)
-            f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y = (0, 0, 0, 0) #self.calc_coup_f(timestep=timestep)
-            f_rep_i_x, f_rep_i_y, f_rep_j_x, f_rep_j_y = (0, 0, 0, 0) #self.calc_rep_f(timestep=timestep, f_coups=(f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y))
+            f_fr_i_x, f_fr_i_y, f_fr_j_x, f_fr_j_y = self.calc_fr_f(timestep=timestep)
+            f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y = self.calc_coup_f(timestep=timestep)
+            f_rep_i_x, f_rep_i_y, f_rep_j_x, f_rep_j_y = self.calc_rep_f(timestep=timestep, f_coups=(f_coup_i_x, f_coup_i_y, f_coup_j_x, f_coup_j_y))
             x_dot_dot_i = (f_fr_i_x + f_coup_i_x + f_rep_i_x) / self.m_i
             x_dot_dot_j = (f_fr_j_x + f_coup_j_x + f_rep_j_x) / self.m_j
             y_dot_dot_i = (f_rep_i_y + f_coup_i_y + f_rep_i_y) / self.m_i

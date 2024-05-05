@@ -3,10 +3,8 @@ from random import uniform
 import statistics
 import scipy as sp
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
 
 
 class MultiCNT:
@@ -223,7 +221,6 @@ class MultiCNT:
         F_coup_y = sum(Forces_on_i_y)
 
         # Calculate F-rep
-        F_coup = np.sqrt(F_coup_x**2 + F_coup_y**2)
         F_rep_x = 0
         F_rep_y = 0
 
