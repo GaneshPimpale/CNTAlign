@@ -1,5 +1,4 @@
-# ME118 Project   
-   
+  
 # Paper   
 [Resin\_CNT\_Align\_Paper-1.pdf](files/resin_cnt_align_paper-1.pdf)    
    
